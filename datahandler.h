@@ -4,13 +4,14 @@
 #include <QFile>
 #include <QDebug>
 #include "node.h"
+#include "link.h"
 
 class DataHandler
 {
 public:
     DataHandler();
     std::vector<Node> readCsvNodes();
-    QMultiHash<QString, QString> readCsvLinks();
+    std::vector<Link> readCsvLinks();
     int calculateNodesNumber(std::vector<Node> nodes);
 };
 

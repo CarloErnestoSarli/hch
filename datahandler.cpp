@@ -34,9 +34,9 @@ std::vector<Node> DataHandler::readCsvNodes()
 }
 
 
-QMultiHash<QString, QString> DataHandler::readCsvLinks()
+std::vector<Link> DataHandler::readCsvLinks()
 {
-    QMultiHash<QString, QString> links;
+    std::vector<Link> links;
     int inputsPos = 1;
     int outputsPos = 2;
 
@@ -67,16 +67,10 @@ QMultiHash<QString, QString> DataHandler::readCsvLinks()
                 for(int i=0; i<inputs.split(";").size(); ++i)
                 {
                     QString input = inputs.split(";").at(i);
-                    links.insert(input, node);
-//                    if(links.contains(input,node))
-//                    {
-//                        //do nothing
-//                        ++notCounter;
-//                    }else
-//                    {
-//                        links.insert(input, node);
-//                        ++incounter;
-//                    }
+                    Link *l = new Link();
+                    l->SetInputName(input);
+                    l->SetOutputName(node);
+                    links.push_back(*l);
                 }
             }
             if(outputs.isEmpty())
@@ -87,19 +81,13 @@ QMultiHash<QString, QString> DataHandler::readCsvLinks()
                 for(int j=0; j<outputs.split(";").size(); ++j)
                 {
                     QString output = outputs.split(";").at(j);
-                    links.insert(node, output);
-
-//                    if(links.contains(node,output))
-//                    {
-//                        //do nothing
-//                        ++notCounter;
-//                    }else
-//                    {
-//                        links.insert(node, output);
-//                        ++outcounter;
-//                    }
+                    Link *l = new Link();
+                    l->SetInputName(node);
+                    l->SetOutputName(output);
+                    links.push_back(*l);
 
                 }
+
             }
         }
 

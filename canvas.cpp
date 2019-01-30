@@ -1,7 +1,7 @@
 #include "canvas.h"
 
 const QPointF CIRCLE_CENTRE = QPointF(50,50);
-static const double RADIUS = 35.0;
+const double RADIUS = 35.0;
 ChordDiagram *o_diagram = new ChordDiagram();
 
 
@@ -9,7 +9,28 @@ ChordDiagram *o_diagram = new ChordDiagram();
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     setMouseTracking(true);
+//    QSizePolicy qsp(QSizePolicy::Preferred,QSizePolicy::Preferred);
+//    if(this->height() > this->width())
+//    {
+//        qsp.setWidthForHeight(true);
+//    }else
+//    {
+//        qsp.setHeightForWidth(true);
+//    }
+//    //  qsp.setHeightForWidth(true);
+//    setSizePolicy(qsp);
 }
+
+//void Canvas::resizeEvent(QResizeEvent *event)
+//{
+//    event->accept();
+
+//    if(event->size().width() > event->size().height()){
+//        QOpenGLWidget::resize(event->size().height(),event->size().height());
+//    }else{
+//        QOpenGLWidget::resize(event->size().width(),event->size().width());
+//    }
+//}
 
 void Canvas::initializeGL()
 {
@@ -35,6 +56,10 @@ void Canvas::paintGL()
     float numSegments = calculateNumCircleSegments(RADIUS);
     drawCircle(CIRCLE_CENTRE.x(), CIRCLE_CENTRE.y(), RADIUS, numSegments);
     placeArcs();
+    o_diagram->CalculateCentreOfArcs();
+    //placeCentrePoints();
+    placeLinks();
+    placeBoundingBoxes();
 }
 
 
@@ -57,7 +82,8 @@ void Canvas::setOrtho()
 
 void Canvas::placeArcs()
 {
-    qDebug() << "Placing";
+    //qDebug() << "Placing Arcs";
+
     std::vector<Node> nodes = o_diagram->GetNodes();
     int numOfArcs = o_diagram->GetNumberOfNodes();
     float sizeOfArcNoGap = 2.0f * M_PI / numOfArcs;
@@ -74,10 +100,79 @@ void Canvas::placeArcs()
         node.SetPolarStart(startAngle);
         node.SetPolarSpan(sizeOfArc);
         node.SetPolarEnd(startAngle+sizeOfArc);
-        drawArc(CIRCLE_CENTRE.x(), CIRCLE_CENTRE.y(), RADIUS, startAngle, sizeOfArc, numSegments);
+        //qDebug() << "----------------------------" << startAngle+sizeOfArc;
+
+        bool highlighted = nodes.at(i).GetHighlighted();
+
+        drawArc(CIRCLE_CENTRE.x(), CIRCLE_CENTRE.y(), RADIUS, startAngle, sizeOfArc, numSegments, highlighted);
     }
     //pass in the array with the updated values to the object
     o_diagram->SetNodes(nodes);
+}
+
+void Canvas::placeCentrePoints()
+{
+    //qDebug() << "Placing Centre Points";
+
+    std::vector<Node> nodes = o_diagram->GetNodes();
+
+    for(auto &it : nodes)
+    {
+        QPointF centre = it.GetCartCentre();
+        drawCentreOfArc(centre);
+    }
+}
+
+void Canvas::placeLinks()
+{
+    //qDebug() << "Placing links";
+
+    std::vector<Link> links = o_diagram->GetLinks();
+    std::vector<Node> nodes = o_diagram ->GetNodes();
+
+    for(auto &it : links)
+    {
+        QString input = it.GetInputName();
+        QString output = it.GetOutputName();
+        QPointF inputCentre;
+        QPointF outputCentre;
+
+        auto nItI = std::find_if(nodes.begin(), nodes.end(), [&input] (Node &obj)
+        {
+            return obj.GetName() == input;
+        });
+
+        if(nItI != nodes.end())
+        {
+            inputCentre = nItI->GetCartCentre();
+        }
+
+        auto nItO = std::find_if(nodes.begin(), nodes.end(), [&output] (Node &obj)
+        {
+            return obj.GetName() == output;
+        });
+
+        if(nItO != nodes.end())
+        {
+            outputCentre = nItO->GetCartCentre();
+        }
+
+        drawBezierLink(inputCentre, outputCentre);
+    }
+
+
+}
+
+void Canvas::placeBoundingBoxes()
+{
+    o_diagram->CalculateBoundingBoxes();
+    std::vector<Node> nodes = o_diagram ->GetNodes();
+    for(auto &it : nodes)
+    {
+        QRectF box = it.GetRectContainer();
+        drawBoundingBoxes(box);
+    }
+
 }
 
 //calculates the number of segments that will compose the circle
@@ -86,9 +181,30 @@ float Canvas::calculateNumCircleSegments(float r)
     return 10 * sqrtf(r); //change10 to increase/decrease precision
 }
 
+QPointF Canvas::calculateBezierePoint(QPointF input, QPointF output, QPointF control, double t)
+{
+    //qDebug() << "Calculating";
+
+    float aX = input.x();
+    float aY = input.y();
+    float bX = control.x();
+    float bY = control.y();
+    float cX = output.x();
+    float cY = output.y();
+
+    float pX = aX + 2*t*(bX-aX) + t*t*(cX-(2*bX)+aX);
+    float pY = aY + 2*t*(bY-aY) + t*t*(cY-(2*bY)+aY);
+
+    float px = qPow((1-t),3) * aX + 3 * t * qPow((1-t),2)*bX + 3* qPow(t,2) * (1-t) * cX + qPow(t,3) * cX;
+    float py = qPow((1-t),3) * aY + 3 * t * qPow((1-t),2)*bY + 3* qPow(t,2) * (1-t) * cY + qPow(t,3) * cY;
+
+    return QPointF(px, py);
+}
+
 void Canvas::drawCircle(float cx, float cy, float r, int numSegments)
 {
-    qDebug()<<"Drawing";
+    //qDebug()<<"Drawing Circle";
+
     float theta = 2.0f * M_PI / float(numSegments);
         float c = cosf(theta);//precalculate the sine and cosine
         float s = sinf(theta);
@@ -113,8 +229,10 @@ void Canvas::drawCircle(float cx, float cy, float r, int numSegments)
 }
 
 
-void Canvas::drawArc(float cx, float cy, float r, float start_angle, float arc_angle, int num_segments)
+void Canvas::drawArc(float cx, float cy, float r, float start_angle, float arc_angle, int num_segments, bool highlighted)
 {
+    //qDebug() << "Drawing Arcs -----------------" << highlighted;
+
     float theta = arc_angle / float(num_segments - 1);
     //theta is now calculated from the arc angle instead, the - 1 bit comes from the fact that the arc is open
 
@@ -130,7 +248,14 @@ void Canvas::drawArc(float cx, float cy, float r, float start_angle, float arc_a
     //since the arc is not a closed curve, this is a strip now
     for(int ii = 0; ii < num_segments; ii++)
     {
-        glColor3d(1,0.5,0.0);
+        if(highlighted)
+        {
+            glColor4d(1,0.5,0.0,1.0);
+        }else
+        {
+            glColor4d(1,0.5,0.0,0.5);
+        }
+
 
         glVertex2f(x + cx, y + cy);
 
@@ -146,6 +271,61 @@ void Canvas::drawArc(float cx, float cy, float r, float start_angle, float arc_a
     glEnd();
 }
 
+void Canvas::drawCentreOfArc(QPointF c)
+{
+    //qDebug() << "Drawing Centre Points";
+
+    glPointSize(2);
+    glBegin(GL_POINTS);
+    glColor3d(0.0, 1.0, 0.0);
+    glVertex2f(c.x(), c.y());
+
+    glEnd();
+}
+
+void Canvas::drawLink(QPointF input, QPointF output)
+{
+    //qDebug() << "Drawing Links";
+
+    glLineWidth(2);
+    glColor3d(0.0,0.0,1.0);
+    glBegin(GL_LINE_STRIP);
+    glVertex2f(input.x(), input.y());
+    glVertex2f(output.x(), output.y());
+
+    glEnd();
+}
+
+void Canvas::drawBezierLink(QPointF input, QPointF output)
+{
+    for(double i =0; i<1; i+= 0.01)
+    {
+        QPointF control = calculateBezierePoint(input, output, CIRCLE_CENTRE, i);
+        QPointF control2 = calculateBezierePoint(input, output, CIRCLE_CENTRE, i+0.01);
+
+        drawLink(control, control2);
+
+    }
+
+}
+
+void Canvas::drawBoundingBoxes(QRectF box)
+{
+    //qDebug() << "Drawing Box";
+    QPointF a = box.topLeft();
+    QPointF b = box.topRight();
+    QPointF c = box.bottomRight();
+    QPointF d = box.bottomLeft();
+    glColor3f(0.0, 1.0, 0.0);
+    glLineWidth(3);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(a.x(), a.y());
+    glVertex2f(b.x(), b.y());
+    glVertex2f(c.x(), c.y());
+    glVertex2f(d.x(), d.y());
+
+    glEnd();
+}
 
 QPointF Canvas::normaliseMouseCoord(QPoint p)
 {
@@ -159,8 +339,51 @@ QPointF Canvas::normaliseMouseCoord(QPoint p)
     double maxTY = 100;
 
     double mx = ((p.x() - minRX)/(maxRX - minRX))*(maxTX-minTX)+minTX;
-    double my = -(((p.y() - minRY)/(maxRY - minRY))*(maxTY-minTY)+minTY);
-
+    double my = (((p.y() - minRY)/(maxRY - minRY))*(maxTY-minTY)+minTY);
+    qDebug() << QPointF(mx,my);
     return QPointF(mx,my);
+
+}
+
+void Canvas::checkBoundingBoxIntersect(QPointF p)
+{
+    //qDebug() << "Checking ----------------------------";
+
+    std::vector<Node> nodes = o_diagram ->GetNodes();
+    bool intersect = false ;
+
+    for(auto &it : nodes)
+    {
+        QRectF box = it.GetRectContainer();
+
+        if(box.contains(p))
+        {
+            intersect = true;
+            qDebug() << it.GetName() << it.GetCartCentre() << p;
+
+        }else
+        {
+            intersect = false;
+        }
+
+        it.SetHighlighted(intersect);
+    }
+    o_diagram->SetNodes(nodes);
+    repaint();
+    //update();
+
+}
+
+
+void Canvas::mouseMoveEvent(QMouseEvent *event)
+{
+//    if(event->buttons() == Qt::LeftButton)
+//    {
+//        qDebug() << "Clicked";
+//        SetClickedPoint(normaliseMouseCoord(event->pos()));
+//    }
+
+    checkBoundingBoxIntersect(normaliseMouseCoord(event->pos()));
+
 
 }

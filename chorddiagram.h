@@ -2,6 +2,7 @@
 #define CHORDDIAGRAM_H
 
 #include <math.h>
+#include <QLineF>
 
 #include "node.h"
 #include "datahandler.h"
@@ -16,11 +17,14 @@ public:
 
     void SetNodes(std::vector<Node> n);
     std::vector<Node> GetNodes();
-    QMultiHash<QString, QString> GetLinks();
-    void SetLinks(QMultiHash<QString, QString> l);
+    std::vector<Link> GetLinks();
+    void SetLinks(std::vector<Link> l);
+    void CalculateCentreOfArcs();
+    void CalculateBoundingBoxes();
+
 private:
     std::vector<Node> m_nodes;
-    QMultiHash<QString, QString> m_links;
+    std::vector<Link> m_links;
     int m_numberOfNodes;
     void init();
     QPointF convertPolarToCartesian(double c);
