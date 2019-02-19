@@ -25,6 +25,58 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QWidget" name="widget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>100</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>250</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="1">
+        <widget class="QLabel" name="boundingBoxesLabel">
+         <property name="text">
+          <string>Show Bounding Boxes </string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="boundingBoxesCheckBox">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Show Center of Arcs</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="checkBox">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -53,8 +105,45 @@
    <class>Canvas</class>
    <extends>QOpenGLWidget</extends>
    <header>canvas.h</header>
+   <slots>
+    <slot>boundingBoxesCheckboxToggle(bool)</slot>
+    <slot>centerOfArcsCheckboxToggle(bool)</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>boundingBoxesCheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>CanvasWidget</receiver>
+   <slot>boundingBoxesCheckboxToggle(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>200</x>
+     <y>124</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>161</x>
+     <y>160</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>CanvasWidget</receiver>
+   <slot>centerOfArcsCheckboxToggle(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>198</x>
+     <y>193</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>133</x>
+     <y>205</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

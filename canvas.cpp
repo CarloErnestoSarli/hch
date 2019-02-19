@@ -18,7 +18,7 @@ Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 //        qsp.setHeightForWidth(true);
 //    }
 //    //  qsp.setHeightForWidth(true);
-//    setSizePolicy(qsp);
+    //    setSizePolicy(qsp);
 }
 
 //void Canvas::resizeEvent(QResizeEvent *event)
@@ -57,7 +57,7 @@ void Canvas::paintGL()
     drawCircle(CIRCLE_CENTRE.x(), CIRCLE_CENTRE.y(), RADIUS, numSegments);
     placeArcs();
     o_diagram->CalculateCentreOfArcs();
-    //placeCentrePoints();
+    placeCentrePoints();
     placeLinks();
     placeBoundingBoxes();
 }
@@ -76,7 +76,7 @@ void Canvas::setOrtho()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glClearColor(1.0,1.0,1.0,1.0);
-    glOrtho(0,100,0,100,-1,1);
+    glOrtho(0,100,100,0,-1,1);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -100,11 +100,14 @@ void Canvas::placeArcs()
         node.SetPolarStart(startAngle);
         node.SetPolarSpan(sizeOfArc);
         node.SetPolarEnd(startAngle+sizeOfArc);
-        //qDebug() << "----------------------------" << startAngle+sizeOfArc;
 
-        bool highlighted = nodes.at(i).GetHighlighted();
+        bool highlighted = node.GetHighlighted();
 
-        drawArc(CIRCLE_CENTRE.x(), CIRCLE_CENTRE.y(), RADIUS, startAngle, sizeOfArc, numSegments, highlighted);
+        //qDebug() << startAngle << sizeOfArc << startAngle+sizeOfArc;
+        drawArc(CIRCLE_CENTRE.x(), CIRCLE_CENTRE.y(), RADIUS, node.GetPolarStart(), node.GetPolarSpan(), numSegments, highlighted);
+
+
+
     }
     //pass in the array with the updated values to the object
     o_diagram->SetNodes(nodes);
@@ -116,10 +119,13 @@ void Canvas::placeCentrePoints()
 
     std::vector<Node> nodes = o_diagram->GetNodes();
 
-    for(auto &it : nodes)
+    if(GetCenterOfArcsToggle())
     {
-        QPointF centre = it.GetCartCentre();
-        drawCentreOfArc(centre);
+        for(auto &it : nodes)
+        {
+            QPointF centre = it.GetCartCentre();
+            drawCentreOfArc(centre);
+        }
     }
 }
 
@@ -166,12 +172,17 @@ void Canvas::placeLinks()
 void Canvas::placeBoundingBoxes()
 {
     o_diagram->CalculateBoundingBoxes();
-    std::vector<Node> nodes = o_diagram ->GetNodes();
-    for(auto &it : nodes)
+
+    if(GetBoundingBoxToggle())
     {
-        QRectF box = it.GetRectContainer();
-        drawBoundingBoxes(box);
+        std::vector<Node> nodes = o_diagram ->GetNodes();
+        for(auto &it : nodes)
+        {
+            QRectF box = it.GetRectContainer();
+            drawBoundingBoxes(box);
+        }
     }
+
 
 }
 
@@ -233,7 +244,7 @@ void Canvas::drawArc(float cx, float cy, float r, float start_angle, float arc_a
 {
     //qDebug() << "Drawing Arcs -----------------" << highlighted;
 
-    float theta = arc_angle / float(num_segments - 1);
+    float theta = arc_angle / float(num_segments -1);
     //theta is now calculated from the arc angle instead, the - 1 bit comes from the fact that the arc is open
 
     float tangetial_factor = tanf(theta);
@@ -251,6 +262,7 @@ void Canvas::drawArc(float cx, float cy, float r, float start_angle, float arc_a
         if(highlighted)
         {
             glColor4d(1,0.5,0.0,1.0);
+            //qDebug() << start_angle;
         }else
         {
             glColor4d(1,0.5,0.0,0.5);
@@ -275,10 +287,11 @@ void Canvas::drawCentreOfArc(QPointF c)
 {
     //qDebug() << "Drawing Centre Points";
 
-    glPointSize(2);
+    glPointSize(5);
     glBegin(GL_POINTS);
     glColor3d(0.0, 1.0, 0.0);
     glVertex2f(c.x(), c.y());
+
 
     glEnd();
 }
@@ -340,7 +353,7 @@ QPointF Canvas::normaliseMouseCoord(QPoint p)
 
     double mx = ((p.x() - minRX)/(maxRX - minRX))*(maxTX-minTX)+minTX;
     double my = (((p.y() - minRY)/(maxRY - minRY))*(maxTY-minTY)+minTY);
-    qDebug() << QPointF(mx,my);
+
     return QPointF(mx,my);
 
 }
@@ -359,7 +372,8 @@ void Canvas::checkBoundingBoxIntersect(QPointF p)
         if(box.contains(p))
         {
             intersect = true;
-            qDebug() << it.GetName() << it.GetCartCentre() << p;
+            qDebug() << it.GetCartCentre();
+            drawCentreOfArc(it.GetCartCentre());
 
         }else
         {
@@ -374,7 +388,6 @@ void Canvas::checkBoundingBoxIntersect(QPointF p)
 
 }
 
-
 void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
 //    if(event->buttons() == Qt::LeftButton)
@@ -382,8 +395,42 @@ void Canvas::mouseMoveEvent(QMouseEvent *event)
 //        qDebug() << "Clicked";
 //        SetClickedPoint(normaliseMouseCoord(event->pos()));
 //    }
-
+    QPointF pos = normaliseMouseCoord(event->pos());
+    QToolTip::showText(event->screenPos().toPoint(), QString::number(pos.x()) + " , " + QString::number(pos.y()), this);
     checkBoundingBoxIntersect(normaliseMouseCoord(event->pos()));
 
 
 }
+
+void Canvas::boundingBoxesCheckboxToggle(bool toggled)
+{
+    SetBoundingBoxToggle(toggled);
+    update();
+}
+
+void Canvas::centerOfArcsCheckboxToggle(bool toggled)
+{
+    SetCenterOfArcsToggle(toggled);
+    update();
+}
+
+void Canvas::SetBoundingBoxToggle(bool t)
+{
+    m_boundingBoxToggle = t;
+}
+
+bool Canvas::GetBoundingBoxToggle()
+{
+    return m_boundingBoxToggle;
+}
+
+void Canvas::SetCenterOfArcsToggle(bool t)
+{
+   m_centerOfArcsToggle = t;
+}
+
+bool Canvas::GetCenterOfArcsToggle()
+{
+    return m_centerOfArcsToggle;
+}
+

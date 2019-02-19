@@ -67,6 +67,7 @@ void ChordDiagram::CalculateBoundingBoxes()
         QLineF distance(it.GetCartStart(), it.GetCartEnd());
         float sideLength = distance.length()/2;
         QPointF centre = it.GetCartCentre();
+        //qDebug() << "Centre-----------" << centre;
         QPointF topLeft = QPointF(centre.x()-sideLength, centre.y()+sideLength);
         QPointF bottomRight = QPointF(centre.x()+sideLength, centre.y()-sideLength);
         QRectF boundingBox(topLeft, bottomRight);

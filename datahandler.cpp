@@ -25,6 +25,7 @@ std::vector<Node> DataHandler::readCsvNodes()
             QString firstColumn = line.split(",").first();
             Node *n = new Node();
             n->SetName(firstColumn);
+            n->SetHighlighted(false);
             nodes.push_back(*n);
 
         }

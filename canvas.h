@@ -15,6 +15,11 @@ class Canvas : public QOpenGLWidget
 public:
     Canvas(QWidget *parent = nullptr);
 
+    void SetBoundingBoxToggle(bool t);
+    bool GetBoundingBoxToggle();
+    void SetCenterOfArcsToggle(bool t);
+    bool GetCenterOfArcsToggle();
+
 protected:
     //virtual void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
     virtual void initializeGL();
@@ -22,6 +27,9 @@ protected:
     virtual void paintGL();
 
 private:
+    bool m_boundingBoxToggle = false;
+    bool m_centerOfArcsToggle = false;
+
     void prepareDraw();
     void setOrtho();
     float calculateNumCircleSegments(float r);
@@ -39,6 +47,10 @@ private:
     void placeBoundingBoxes();
     void mouseMoveEvent(QMouseEvent *event);
     void checkBoundingBoxIntersect(QPointF p);
+
+private slots:
+    void boundingBoxesCheckboxToggle(bool toggled);
+    void centerOfArcsCheckboxToggle(bool toggled);
 };
 
 
