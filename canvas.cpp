@@ -9,28 +9,12 @@ ChordDiagram *o_diagram = new ChordDiagram();
 Canvas::Canvas(QWidget *parent) : QOpenGLWidget(parent)
 {
     setMouseTracking(true);
-//    QSizePolicy qsp(QSizePolicy::Preferred,QSizePolicy::Preferred);
-//    if(this->height() > this->width())
-//    {
-//        qsp.setWidthForHeight(true);
-//    }else
-//    {
-//        qsp.setHeightForWidth(true);
-//    }
-//    //  qsp.setHeightForWidth(true);
-    //    setSizePolicy(qsp);
 }
 
-//void Canvas::resizeEvent(QResizeEvent *event)
-//{
-//    event->accept();
-
-//    if(event->size().width() > event->size().height()){
-//        QOpenGLWidget::resize(event->size().height(),event->size().height());
-//    }else{
-//        QOpenGLWidget::resize(event->size().width(),event->size().width());
-//    }
-//}
+Canvas::~Canvas()
+{
+   delete o_diagram;
+}
 
 void Canvas::initializeGL()
 {
@@ -43,6 +27,38 @@ void Canvas::initializeGL()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //set canvas background to white
     glClearColor(1.0,1.0,1.0,1.0);
+
+    QOpenGLShader lineVShader(QOpenGLShader::Vertex);
+    lineVShader.compileSourceFile(":/shaders/line.vert");
+
+    QOpenGLShader lineFShader(QOpenGLShader::Fragment);
+    lineFShader.compileSourceFile(":/shaders/line.frag");
+
+    m_program.addShader(&lineVShader);
+    m_program.addShader(&lineFShader);
+
+    if(!m_program.link())
+    {
+        qWarning("Coputer says no!");
+        return;
+    }
+
+    //name equal to shader variable
+    m_xPointsAttr = m_program.attributeLocation("xPoint");
+    m_yPointsAttr = m_program.attributeLocation("yPoint");
+    m_colourAttr = m_program.attributeLocation("colourAttr");
+    m_textureAttr = m_program.uniformLocation("colourTexture");
+    m_matrixUniform = m_program.uniformLocation("matrix");
+
+    m_xPointsBuff.create();
+    m_yPointsBuff.create();
+    m_colourBuff.create();
+
+    m_vertexArray.create();
+
+    m_program.release();
+
+
 }
 
 void Canvas::resizeGL(int w, int h)
@@ -78,6 +94,13 @@ void Canvas::setOrtho()
     glClearColor(1.0,1.0,1.0,1.0);
     glOrtho(0,100,100,0,-1,1);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    m_program.bind();
+    QMatrix4x4 matrix;
+    matrix.ortho(0,100,100,0,2,-2);
+    matrix.translate(0,0,1);
+    m_program.setUniformValue(m_matrixUniform, matrix);
+    m_program.release();
 }
 
 void Canvas::placeArcs()
@@ -138,10 +161,14 @@ void Canvas::placeLinks()
 
     for(auto &it : links)
     {
+        QVector<QColor> colourMap = {QColor(127,201,127), QColor(190,174,212), QColor(253,192,134), QColor(255,255,153), QColor(56,108,176), QColor(240,2,127), QColor(191,91,23),QColor(102,102,102) };
         QString input = it.GetInputName();
         QString output = it.GetOutputName();
         QPointF inputCentre;
         QPointF outputCentre;
+        QColor inputColour;
+        QColor outputColour;
+
 
         auto nItI = std::find_if(nodes.begin(), nodes.end(), [&input] (Node &obj)
         {
@@ -151,6 +178,7 @@ void Canvas::placeLinks()
         if(nItI != nodes.end())
         {
             inputCentre = nItI->GetCartCentre();
+            inputColour = colourMap.at(nItI->GetGroup()-1);
         }
 
         auto nItO = std::find_if(nodes.begin(), nodes.end(), [&output] (Node &obj)
@@ -161,9 +189,10 @@ void Canvas::placeLinks()
         if(nItO != nodes.end())
         {
             outputCentre = nItO->GetCartCentre();
+            outputColour = colourMap.at(nItO->GetGroup()-1);
         }
 
-        drawBezierLink(inputCentre, outputCentre);
+        drawBezierLink(inputCentre, outputCentre, inputColour, outputColour);
     }
 
 
@@ -309,17 +338,88 @@ void Canvas::drawLink(QPointF input, QPointF output)
     glEnd();
 }
 
-void Canvas::drawBezierLink(QPointF input, QPointF output)
+void Canvas::drawBezierLink(QPointF input, QPointF output, QColor c1, QColor c2)
 {
-    for(double i =0; i<1; i+= 0.01)
+    QVector<float> xPoints;
+    QVector<float> yPoints;
+    QVector<float> pointOnLine;
+
+    const int colourMap[] =
+    {
+        c1.red(), c1.green(), c1.blue(), c2.red(), c2.green(), c2.blue()
+    };
+
+    for(double i=0; i<1; i+=0.01)
     {
         QPointF control = calculateBezierePoint(input, output, CIRCLE_CENTRE, i);
-        QPointF control2 = calculateBezierePoint(input, output, CIRCLE_CENTRE, i+0.01);
+//        QPointF control2 = calculateBezierePoint(input, output, CIRCLE_CENTRE, i+0.01);
 
-        drawLink(control, control2);
+        xPoints.append(control.x());
+        yPoints.append(control.y());
+        pointOnLine.append(i);
+
+        //drawLink(control, control2);
 
     }
 
+    //get size of buffer
+    int size = xPoints.size() * int(sizeof (float));
+
+    //bind vertex array to contain buffer
+    m_vertexArray.bind();
+
+    //load buffers and put data into them
+    m_xPointsBuff.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    m_xPointsBuff.bind();
+    m_xPointsBuff.allocate(xPoints.constData(), size);
+    m_xPointsBuff.release();
+
+    m_yPointsBuff.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    m_yPointsBuff.bind();
+    m_yPointsBuff.allocate(yPoints.constData(), size);
+    m_yPointsBuff.release();
+
+    m_colourBuff.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    m_colourBuff.bind();
+    m_colourBuff.allocate(pointOnLine.constData(), size);
+    m_colourBuff.release();
+
+    //create texture
+    QOpenGLTexture colourTexture(QOpenGLTexture::Target1D);
+    colourTexture.setFormat(QOpenGLTexture::RGB8_UNorm);
+    colourTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+    colourTexture.setMinificationFilter(QOpenGLTexture::Linear);
+    colourTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+    colourTexture.setSize(2);
+    colourTexture.allocateStorage(QOpenGLTexture::RGB, QOpenGLTexture::UInt8);
+    colourTexture.setData(QOpenGLTexture::RGB, QOpenGLTexture::UInt8, colourMap);
+
+    m_program.bind();
+
+    m_xPointsBuff.bind();
+    m_program.enableAttributeArray(m_xPointsAttr);
+    m_program.setAttributeBuffer(m_xPointsAttr, GL_FLOAT, 0, 1);
+    m_xPointsBuff.release();
+
+    m_yPointsBuff.bind();
+    m_program.enableAttributeArray(m_yPointsAttr);
+    m_program.setAttributeBuffer(m_yPointsAttr, GL_FLOAT, 0, 1);
+    m_yPointsBuff.release();
+
+    m_colourBuff.bind();
+    m_program.enableAttributeArray(m_colourAttr);
+    m_program.setAttributeBuffer(m_colourAttr, GL_FLOAT, 0, 1);
+    m_colourBuff.release();
+
+    //bound throughout drawing
+    colourTexture.bind(0);
+    m_program.setUniformValue(m_textureAttr, 0);
+
+    glDrawArrays(GL_LINE_STRIP,0, xPoints.size());
+
+    colourTexture.release();
+    m_program.release();
+    m_vertexArray.release();
 }
 
 void Canvas::drawBoundingBoxes(QRectF box)

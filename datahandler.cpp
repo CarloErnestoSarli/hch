@@ -10,7 +10,7 @@ std::vector<Node> DataHandler::readCsvNodes()
 {
     std::vector<Node> nodes;
     //needs refactoring
-    QFile file("/home/carlo/Development/C++/CSV/InternetOfEnergy.csv");
+    QFile file("/home/carlo/Development/PhD/C++/hch/data/InternetOfEnergy.csv");
 
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {
@@ -23,9 +23,11 @@ std::vector<Node> DataHandler::readCsvNodes()
         {
             QString line = in.readLine();
             QString firstColumn = line.split(",").first();
+            QString group = line.split(",").at(3);
             Node *n = new Node();
             n->SetName(firstColumn);
             n->SetHighlighted(false);
+            n->SetGroup(group.toInt());
             nodes.push_back(*n);
 
         }
@@ -42,7 +44,7 @@ std::vector<Link> DataHandler::readCsvLinks()
     int outputsPos = 2;
 
     //needs refactoring
-    QFile file("/home/carlo/Development/C++/CSV/InternetOfEnergy.csv");
+    QFile file("/home/carlo/Development/PhD/C++/hch/data/InternetOfEnergy.csv");
 
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {

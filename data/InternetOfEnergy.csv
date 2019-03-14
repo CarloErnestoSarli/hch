@@ -1,0 +1,48 @@
+Nodes,Inputs,Outputs,Group,DATA SOURCE
+Coatings,Bio-polymers,,1,barron18MarchMeeting.pdf p. 4
+Chemicals,,,1,barron18MarchMeeting.pdf p. 4
+Health,Lipids,,1,barron18MarchMeeting.pdf p. 4
+Personal Care,,,1,barron18MarchMeeting.pdf p. 4
+Food,Fermentation chemicals;Proteins,,1,barron18MarchMeeting.pdf p. 4
+Agriculture,Proteins,Algae bio-refinery,1,barron18MarchMeeting.pdf p. 4
+Aquiculture,Algae,Smartaqua WEFO,1,barron18MarchMeeting.pdf p. 4
+Smartaqua WEFO,Aquiculture,,4,barron18MarchMeeting.pdf p. 4
+Bio-polymers,Bio-processes,Coatings,2,barron18MarchMeeting.pdf p. 4
+Acetic acid,Bio-processes,Chemicals,2,barron18MarchMeeting.pdf p. 4
+Fermentation chemicals,Bio-processes,Food,2,barron18MarchMeeting.pdf p. 4
+Lipids,Algae bio-refinery,Health;Personal Care,2,barron18MarchMeeting.pdf p. 4
+Proteins,Algae bio-refinery,Food;Agriculture,2,barron18MarchMeeting.pdf p. 4
+Algae,,Aquiculture,2,barron18MarchMeeting.pdf p. 4
+CNTs from CO2,CO2 separation,Automotive;Aerospace,4,barron18MarchMeeting.pdf p. 4
+Bio-processes,CO2 separation;H2,Sulfur;Bio-polymers;Acetic acid;Fermentation chemicals,3,barron18MarchMeeting.pdf p. 4
+CO2 separation,Welsh Heavy Industry;Tata Steel,CNTs from CO2;Bio-processes;Algae bio-refinery,3,barron18MarchMeeting.pdf p. 4
+Algae bio-refinery,Agriculture;CO2 separation;Welsh Water,Lipids;Proteins;Algae,3,barron18MarchMeeting.pdf p. 4
+Fermat,Tata Steel,Tata Steel,4,barron18MarchMeeting.pdf p. 4
+Sulfur,Bio-processes,S-polymers,2,barron18MarchMeeting.pdf p. 4
+Welsh Heavy Industry,,CO2 separation,5,barron18MarchMeeting.pdf p. 4
+Tata Steel,Fermat;Council plastic waste;Kess;H2;O2,CO2 separation;Heat-to-electricity;Fermat;electrolytic H2;Flexis WEFO,5,barron18MarchMeeting.pdf p. 4
+Welsh Water,O2,Algae bio-refinery,5,barron18MarchMeeting.pdf p. 4
+Council plastic waste,,Tata Steel,1,barron18MarchMeeting.pdf p. 4
+S-polymers,Sulfur,Electronics,6,barron18MarchMeeting.pdf p. 4
+Kess,,Tata Steel,4,barron18MarchMeeting.pdf p. 4
+Electronics,S-polymers,,1,barron18MarchMeeting.pdf p. 4
+electrolytic H2,Tata Steel;Heat-to-electricity,H2;O2,3,barron18MarchMeeting.pdf p. 4
+Heat-to-electricity,Tata Steel,electrolytic H2;Zero gap electrolysis,3,barron18MarchMeeting.pdf p. 4
+Zero gap electrolysis,Heat-to-electricity;Wind/Tidal/Solar;Specific WEFO/EPSRC,H2;O2,3,barron18MarchMeeting.pdf p. 4
+Wind/Tidal/Solar,,Zero gap electrolysis,5,barron18MarchMeeting.pdf p. 4
+Flexis WEFO,Tata Steel,,4,barron18MarchMeeting.pdf p. 4
+Polyethylene,Ethylene,Automotive;Aerospace,6,barron18MarchMeeting.pdf p. 4
+H2,electrolytic H2;Zero gap electrolysis,Tata Steel;Bio-processes;Catalysis;Wales & West Utilities;Transportation,2,barron18MarchMeeting.pdf p. 4
+O2,electrolytic H2;Zero gap electrolysis,Tata Steel;Welsh Water;Hospitals & NHS;Industry,2,barron18MarchMeeting.pdf p. 4
+Specific WEFO/EPSRC,,Zero gap electrolysis;Hypercom,4,barron18MarchMeeting.pdf p. 4
+Automotive,CNTs from CO2;Polyethylene,,7,barron18MarchMeeting.pdf p. 4
+Ethylene,Catalysis,Polyethylene,6,barron18MarchMeeting.pdf p. 4
+Catalysis,H2,Ethylene;Fuel;Methane,4,barron18MarchMeeting.pdf p. 4
+Wales & West Utilities,H2;Methane;Hypercom,Welsh Heavy Industry,1,barron18MarchMeeting.pdf p. 4
+Transportation,H2;Hypercom,,1,barron18MarchMeeting.pdf p. 4
+Hospitals & NHS,O2,,1,barron18MarchMeeting.pdf p. 4
+Industry,O2,,1,barron18MarchMeeting.pdf p. 4
+Aerospace,CNTs from CO2;Polyethylene;Fuel,,7,barron18MarchMeeting.pdf p. 4
+Fuel,Catalysis,Aerospace,6,barron18MarchMeeting.pdf p. 4
+Methane,Catalysis,Wales & West Utilities,6,barron18MarchMeeting.pdf p. 4
+Hypercom,Specific WEFO/EPSRC,Wales & West Utilities;Transportation,4,barron18MarchMeeting.pdf p. 4

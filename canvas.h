@@ -3,7 +3,14 @@
 
 #include <QtOpenGL>
 #include <QOpenGLWidget>
-//#include <QResizeEvent>
+#include <QOpenGLBuffer>
+#include <QOpenGLShaderProgram>
+#include <QMatrix4x4>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLTexture>
+#include <QOpenGLFunctions>
+#include <QOpenGLFramebufferObject>
+
 
 #include "chorddiagram.h"
 #include "node.h"
@@ -14,11 +21,13 @@ class Canvas : public QOpenGLWidget
 
 public:
     Canvas(QWidget *parent = nullptr);
+    ~Canvas();
 
     void SetBoundingBoxToggle(bool t);
     bool GetBoundingBoxToggle();
     void SetCenterOfArcsToggle(bool t);
     bool GetCenterOfArcsToggle();
+
 
 protected:
     //virtual void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
@@ -27,6 +36,21 @@ protected:
     virtual void paintGL();
 
 private:
+    QOpenGLShaderProgram m_program;
+
+    int m_xPointsAttr;
+    int m_yPointsAttr;
+    int m_colourAttr;
+    int m_textureAttr;
+    int m_matrixUniform;
+
+    QOpenGLBuffer m_xPointsBuff;
+    QOpenGLBuffer m_yPointsBuff;
+    QOpenGLBuffer m_colourBuff;
+
+    QOpenGLVertexArrayObject m_vertexArray;
+
+
     bool m_boundingBoxToggle = false;
     bool m_centerOfArcsToggle = false;
 
@@ -41,7 +65,7 @@ private:
     void drawCentreOfArc(QPointF c);
     void placeLinks();
     void drawLink(QPointF input, QPointF output);
-    void drawBezierLink(QPointF input, QPointF output);
+    void drawBezierLink(QPointF input, QPointF output, QColor c1, QColor c2);
     QPointF calculateBezierePoint(QPointF input, QPointF output, QPointF control, double t);
     void drawBoundingBoxes(QRectF box);
     void placeBoundingBoxes();

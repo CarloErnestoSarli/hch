@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>data/InternetOfEnergy.csv</file>
+        <file>shaders/line.frag</file>
+        <file>shaders/line.vert</file>
+    </qresource>
+</RCC>
